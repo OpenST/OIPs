@@ -1,0 +1,105 @@
+@startuml credit-class-diagram
+
+class CreditBudgetHolder <<Contract>> {
+    +\n\
+    executeRule ( \n\
+        ""address"" _tokenHolder, \n\
+        ""uint256"" _creditAmount, \n\
+        ""address"" _to, \n\
+        ""bytes"" _data, \n\
+        ""uint256"" _tokenHolderNonce, \n\
+        ""uint8"" _v, \n\
+        ""bytes32"" _r, \n\
+        ""bytes32"" _s \n\
+    )
+    #\n\
+    constructor ( \n\
+        ""address"" _tokenRules, \n\
+        ""address"" _token \n\
+    ) \n
+}
+
+class TokenHolder <<Contract>> {
+    +\n\
+    executeRule ( \n\
+        ""address"" _to, \n\
+        ""bytes"" _data, \n\
+        ""uint256"" _nonce, \n\
+        ""uint8"" _v, \n\
+        ""bytes32"" _r, \n\
+        ""bytes32"" _s \n\
+    ) \n
+}
+
+class Credit <<Contract>> {
+    +\n\
+    executeTransfers ( \n\
+        ""address"" _from, \n\
+        ""address[]"" _transfersTo, \n\
+        ""uint256[]"" _transfersAmount \n\
+    )
+    #\n\
+    constructor ( \n\
+        ""address"" _creditBudgetHolder, \n\
+        ""address"" _tokenRules, \n\
+        ""address"" _token \n\
+    ) \n
+}
+
+class UtilityBrandedToken <<Contract>> {
+    #\n\
+    approve ( \n\
+        address _spender, \n\
+        uint256 _value \n\
+    ) \n\
+        public returns (bool)
+    #\n\
+    allowance ( \n\
+        address _owner, \n\
+        address _spender \n\
+    ) public view returns (uint256) \n
+}
+
+class CreditRule <<Rule Contract>>
+
+class TokenRules <<Contract>> {
+    +\n\
+    executeTransfers ( \n\
+        ""address"" _from, \n\
+        ""address[]"" _transfersTo, \n\
+        ""uint256[]"" _transfersAmount \n\
+    ) \n
+}
+
+class Organized <<Contract>>
+
+class MultiSigWallet <<Contract>>
+
+together {
+    class Organized
+    class MultiSigWallet
+    class CreditBudgetHolder
+}
+
+together {
+    class Credit
+    class CreditRule
+}
+
+Organized <|-- CreditBudgetHolder
+MultiSigWallet <|-- CreditBudgetHolder
+
+CreditBudgetHolder o-- TokenRules
+CreditBudgetHolder o-- UtilityBrandedToken
+TokenHolder o-- TokenRules
+CreditRule o-- TokenRules
+CreditRule o-- Credit
+Credit o-- CreditBudgetHolder
+Credit o-- TokenRules
+TokenRules o-- CreditRule
+Credit o-- UtilityBrandedToken
+
+CreditBudgetHolder - CreditRule
+TokenHolder - CreditRule
+
+@enduml
