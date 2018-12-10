@@ -1,12 +1,12 @@
 ---
 oip: <to be assigned>
-title: <Credit>
-author: <Paruyr Gevorgyan (@pgev), Benjamin Bollen (@benjaminbollen)>
-discussions-to: <discuss.openst.org>
+title: Credit
+author: Paruyr Gevorgyan (@pgev), Benjamin Bollen (@benjaminbollen)
+discussions-to: discuss.openst.org
 status: Draft
-type: <Standards Track>
-category (*only required for Standard Track): <OpenST>
-created: <2018-12-06>
+type: Standards Track
+category (*only required for Standard Track): OpenST
+created: 2018-12-06
 ---
 
 # Credit
