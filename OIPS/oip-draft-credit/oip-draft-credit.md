@@ -4,7 +4,7 @@ title: <Credit>
 author: <Paruyr Gevorgyan (@pgev), Benjamin Bollen (@benjaminbollen)>
 discussions-to: <discuss.openst.org>
 status: Draft
-type: <Standards Track | Informational | Meta>
+type: <Standards Track>
 category (*only required for Standard Track): <OpenST>
 created: <2018-12-06>
 ---
@@ -15,20 +15,46 @@ created: <2018-12-06>
 
 <!--"If you can't explain it simply, you don't understand it well enough."
 Provide a simplified and layman-accessible explanation of the OIP.-->
-Crediting allows an organization to incentivize economy participants to interact
-within its application, by giving them tokens that could be spent only within
-the current economy.
+The current OIP introduces a crediting feature that allows an organization to
+incentivize economy participants to interact within its application,
+by distributing tokens that could be spent only within the current economy.
 
 ## Abstract
 
 <!--A short (~200 word) description of the technical issue being addressed.-->
-A short (~200 word) description of the technical issue being addressed.
+The current OIP develops a new set of smart contracts that allows
+implementation of a crediting workflow by economy admins. The proposed solution
+should extend the existing token economy contracts and do not alter interfaces
+and implementations of existing ones. Loose coupling between components
+should be carried on.
 
 ## Specification
 
 <!--The technical specification should describe the syntax and semantics of any
 new feature. The specification should be detailed enough to allow competing,
 interoperable implementations.-->
+
+The current OIP proposes a set of contracts to enable the crediting feature by
+economy admins. The following contracts taking part in the proposed
+workflow already exists in the openst-contracts and stay unchanged with
+regards to the interfaces and implementations:
+
+- TokenHolder
+- TokenRules
+- UtilityBrandedToken
+
+The following contracts and a rule contract template gets introduced:
+
+- CreditBudgetHolder
+- Credit
+- Custom Rule (a template contract for crediting)
+
+In the proposal, TokenHolder, TokenRules, and UtilityBrandedToken do not depend
+on Credit and CreditBudgetHolder and are unaware of those new contracts.
+This is an essential feature for loose coupling of components.
+The only connection with an existing token economy contracts is a custom
+rule being aware of Credit contract and delegating the execution of
+transfers to it.
 
 ### Participants
 
@@ -38,7 +64,7 @@ Organization Worker (address)
 
     A whitelisted worker of the organization.
 
-Budget Holder (contract)
+Credit Budget Holder (contract)
 
     A contract that keeps the organization's budget for crediting.
 
@@ -75,7 +101,7 @@ Token Rules (contract)
 ```solidity
 
 /**
- * Contract keeps crediting budget of an organization.
+ * Contract keeps a crediting budget of an organization.
  *
  * Contract's executeRule() function approves TokenRules as a spender for the
  * crediting amount and delegates a rule execution farther to TokenHolder of
