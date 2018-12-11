@@ -18,7 +18,7 @@ org_worker->credit_budget_holder: \n\
         ""uint8"" v, \n\
         ""bytes32"" r, \n\
         ""bytes32"" s \n\
-    **)** **payable** **onlyWorker**
+    **)** **onlyWorker**
 
 credit_budget_holder->token_rules: **allowTransfers()**
 credit_budget_holder->ubt: **approve( **tokenRules, creditAmount **)**
@@ -28,7 +28,7 @@ credit_budget_holder->token_holder: **executeRule( **to, data, none, v, r, s **)
 token_holder->token_rules: **allowTransfers()**
 token_holder->ubt: **approve(** tokenRules, spendingLimit **)**
 
-token_holder->custom_rule: **_to.call.value(msg.value)(_data)**
+token_holder->custom_rule: **_to.call.value(msg.value)(data)**
 
 custom_rule->credit: \n\
     **executeTransfers(** \n\

@@ -115,10 +115,12 @@ contract CreditBudgetHolder is Organized, is MultiSigWallet {
      * @param _multisig Multisig contract address to handle ownership.
      * @param _tokenRules TokenRules address of the economy.
      * @param _token Utility branded token address of the economy.
+     * @param _organization Address of an organization.
      */
      constructor(
          address _tokenRules,
-         address _token
+         address _token,
+         address _organization
      )
         public;
 
@@ -172,6 +174,25 @@ contract CreditBudgetHolder is Organized, is MultiSigWallet {
         payable
         onlyWorker
     returns (bool _executionStatus);
+
+    /**
+     * Transfers _value amount of utility branded tokens to address _to.
+     *
+     * Function requiers:
+     *      - Only owner can call the function.
+     *
+     * @param _to Address to transfer tokens.
+     * @param _value An amount of tokens to transfer.
+     *
+     * @return success_ True if transfer is successful, otherwise false.
+     */
+    function transfer(
+        address _to,
+        uint256 _value
+    )
+        external
+        onlyOwner
+        returns (bool success_);
 
 }
 ```
