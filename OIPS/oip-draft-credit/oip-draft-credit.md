@@ -90,11 +90,11 @@ Token Rules (contract)
 
 ### UML Sequence Diagram
 
-![Credit Sequence Diagram](./credit-sequence-diagram.png "Credit Sequence Diagram")
+![Credit Sequence Diagram](./sequence-diagram.png "Credit Sequence Diagram")
 
 ### UML Class Diagram
 
-![Credit Class Diagram](./credit-class-diagram.png "Credit Class Diagram")
+![Credit Class Diagram](./class-diagram.png "Credit Class Diagram")
 
 ### Contract Interfaces
 

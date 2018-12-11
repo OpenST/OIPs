@@ -1,4 +1,4 @@
-@startuml credit-sequence-diagram
+@startuml sequence-diagram
 
 actor org_worker as "Organization\nWorker"
 participant credit_budget_holder as "Credit Budget Holder"

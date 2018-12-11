@@ -1,4 +1,4 @@
-@startuml credit-class-diagram
+@startuml class-diagram
 
 class CreditBudgetHolder <<Contract>> {
     ..
