@@ -53,14 +53,14 @@ because the messagebus nonce in gateway locks a single message per staker -
 and the UXC contract address is the `staker` for the gateway contract.
 A UXC can be (re-)used for multiple gateways in parallel.
 
-Assumptions:
+#### Assumptions:
 - staking OST originates from a hardware wallet (currently no support for
     EIP-721)
 
-Flow BrandedToken+Gateway:
+#### Flow BrandedToken+Gateway:
 
-1. User approves transfer of OST to composer `OST.approve(uxc, amount)` (SIGN1)
-2. User requests stake from composer `uxc.requestStake(...)` (SIGN2)
+1. User approves transfer of OST to composer `OST.approve(uxc, amount)` (USER_SIGN1)
+2. User requests stake from composer `uxc.requestStake(...)` (USER_SIGN2)
 
 ```solidity
 // see more detailed pseudocode below
@@ -68,21 +68,52 @@ function uxc:requestStake(<all-user-params>)
 {
     // move OST from user to uxc
     // uxc.requestStake(stakeVT, mintVBT);
-    // store struct with <all-user-params>
+    // store StakeRequest struct with <all-user-params>
+}
+```
+3. Event from `VBT` contract `VBT:StakeRequested` is evaluated against the
+minting policy of the Branded Token.  A registered workers' key for the
+VBT's organisation can sign the `stakeRequestHash`; the resulting signature
+`(r, s, v)` is required to approve the stakeRequest in the VBT contract. (ORG_SIGN1)
+
+4. Facilitator can generate a secret and corresponding hashlock for
+`gateway:stake`, however the staker is the composer `uxc`,
+so the facilitator must call on `uxc.acceptStakeRequest(...)` (FACIL_SIGN1)
+
+```solidity
+// see more detailed pseudocode below
+function uxc::acceptStakeRequest(_stakeRequestHash, _ORG_SIGN1, _hashLock)
+{
+    // load sr = StakeRequests[_stakeRequestHash]
+    // require(VBT.acceptStakeRequest(_stakeRequestHash, _ORG_SIGN1));
+    // VBT.approve(sr.gateway, sr.mintVBT);
+    // GatewayI(sr.gateway).stake(
+        sr.mintVBT,
+        sr.beneficiary,
+        sr.gasPrice,
+        sr.gasLimit,
+        sr.nonce,
+        _hashLock
+    );
+
+    // remove stakeRequest struct
 }
 ```
 
-## Rationale
-<!--The rationale fleshes out the specification by describing what motivated the design and why particular design decisions were made. It should describe alternate designs that were considered and related work, e.g. how the feature is supported in other languages. The rationale may also provide evidence of consensus within the community, and should discuss important objections or concerns raised during discussion.-->
-The rationale fleshes out the specification by describing what motivated the design and why particular design decisions were made. It should describe alternate designs that were considered and related work, e.g. how the feature is supported in other languages. The rationale may also provide evidence of consensus within the community, and should discuss important objections or concerns raised during discussion.-->
+#### Additional requirements
 
-## Backwards Compatibility
-<!--All OIPs that introduce backwards incompatibilities must include a section describing these incompatibilities and their severity. The OIP must explain how the author proposes to deal with these incompatibilities. OIP submissions without a sufficient backwards compatibility treatise may be rejected outright.-->
-All OIPs that introduce backwards incompatibilities must include a section describing these incompatibilities and their severity. The OIP must explain how the author proposes to deal with these incompatibilities. OIP submissions without a sufficient backwards compatibility treatise may be rejected outright.
+Composer must also support
+- `transferVT`, `approveVT` by `onlyOwner`
+- `transferVBT`, `approveVBT` by `onlyOwner`
+- `revertStakeRequest` for VBT
+- `revertStake` for Gateway
 
-## Test Cases
-<!--Test cases for an implementation are mandatory for OIPs that are affecting consensus changes. Other OIPs can choose to include links to test cases if applicable.-->
-Test cases for an implementation are mandatory for OIPs that are affecting consensus changes. Other OIPs can choose to include links to test cases if applicable.
+Composer can support
+- `destroy` to selfdestruct, but be warned that it risks loss of funds if there
+are ongoing VBT stake requests or gateway stake operations - on revert they
+would refund the destroyed contract address. We can check minimally that the
+composer has no balances and/or there are no ongoing stake requests
+(optionally).
 
 ## Implementation
 <!--The implementations must be completed before any OIP is given status "Final", but it need not be completed before the OIP is accepted. While there is merit to the approach of reaching consensus on the specification and rationale before writing code, the principle of "rough consensus and running code" is still useful when it comes to resolving many discussions of API details.-->
@@ -114,17 +145,17 @@ contract GatewayComposer {
         uint256 _nonce
     )
         onlyOwner
-        returns (uint256 stakedAmount_)
+        returns (bytes32 stakeRequestHash_)
     {
         require(_mintVBT == BT.convert(_stakeVT));
         require(OST.transferFrom(msg.sender, this, _stakeVT));
         OST.approve(VBT, _stakeVT);
         require(VBT.requestStake(_stakeVT, _mintVBT));
 
-        stakeRequests[gateway] = StakeRequest({
+        stakeRequests[_stakeRequestHash] = StakeRequest({
             stakeVT: stakeVT,
             mintVBT: _mintVBT,
-            // gateway: _gateway,
+            gateway: _gateway,
             beneficiary: _beneficiary,
             gasPrice: _gasPrice,
             gasLimit: _gasLimit,
@@ -132,7 +163,27 @@ contract GatewayComposer {
         });
     }
 
-    function acceptStakeRequest()
+    function acceptStakeRequest(
+        bytes32 _stakeRequestHash,
+        bytes32 _r,
+        bytes32 _s,
+        uint8 _v,
+        bytes32 _hashLock
+    )
+        returns (bytes32 messageHash_)
+    {
+        // load sr = StakeRequests[_stakeRequestHash]
+        // require(VBT.acceptStakeRequest(_stakeRequestHash, _ORG_SIGN1));
+        // VBT.approve(sr.gateway, sr.mintVBT);
+        require(GatewayI(sr.gateway).stake(
+            sr.mintVBT,
+            sr.beneficiary,
+            sr.gasPrice,
+            sr.gasLimit,
+            sr.nonce,
+            _hashLock
+        ));
+    }
 
     function transferVT(...) onlyOwner
     function approveVT(...) onlyOwner
