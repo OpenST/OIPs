@@ -1,8 +1,8 @@
 ---
 oip: <to be assigned>
 title: <UX Composer for Branded Token and Gateway>
-author: <Benjamin Bollen (@benjaminbollen)>
-discussions-to: <discuss.openst.org>
+author: <@jasonklein, @abhayks1, Benjamin Bollen (@benjaminbollen)>
+discussions-to: <https://discuss.openst.org/t/uxcomposer-brandedtoken-gateway/53>
 status: Draft
 type: <Meta>
 created: <2018-11-28>
