@@ -76,7 +76,10 @@ minting policy of the Branded Token.  A registered workers' key for the
 VBT's organisation can sign the `stakeRequestHash`; the resulting signature
 `(r, s, v)` is required to approve the stakeRequest in the VBT contract. (ORG_SIGN1)
 
-4. Facilitator can generate a secret and corresponding hashlock for
+4. Facilitator can call `gateway.bounty()` to know the active bounty amount,
+and must call `OST.approve(uxc, bounty)`.  This way the bounty
+
+5. Facilitator can generate a secret and corresponding hashlock for
 `gateway:stake`, however the staker is the composer `uxc`,
 so the facilitator must call on `uxc.acceptStakeRequest(...)` (FACIL_SIGN1)
 
@@ -85,6 +88,11 @@ so the facilitator must call on `uxc.acceptStakeRequest(...)` (FACIL_SIGN1)
 function uxc::acceptStakeRequest(_stakeRequestHash, _ORG_SIGN1, _hashLock)
 {
     // load sr = StakeRequests[_stakeRequestHash]
+
+    // bounty = GatewayI(sr.gateway).bounty();
+    // ost.transferFrom(msg.sender, this, bounty);
+    // ost.approve(st.gateway, bounty);
+
     // require(VBT.acceptStakeRequest(_stakeRequestHash, _ORG_SIGN1));
     // VBT.approve(sr.gateway, sr.mintVBT);
     // GatewayI(sr.gateway).stake(
@@ -173,6 +181,11 @@ contract GatewayComposer {
         returns (bytes32 messageHash_)
     {
         // load sr = StakeRequests[_stakeRequestHash]
+
+        // bounty = GatewayI(sr.gateway).bounty();
+        // ost.transferFrom(msg.sender, this, bounty);
+        // ost.approve(st.gateway, bounty);
+
         // require(VBT.acceptStakeRequest(_stakeRequestHash, _ORG_SIGN1));
         // VBT.approve(sr.gateway, sr.mintVBT);
         require(GatewayI(sr.gateway).stake(
