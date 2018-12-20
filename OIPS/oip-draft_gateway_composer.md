@@ -1,6 +1,6 @@
 ---
 oip: <to be assigned>
-title: <UX Composer for Branded Token and Gateway>
+title: <Gateway composer for Branded Token and Gateway>
 author: <@jasonklein, @abhayks1, Benjamin Bollen (@benjaminbollen)>
 discussions-to: <https://discuss.openst.org/t/uxcomposer-brandedtoken-gateway/53>
 status: Draft
@@ -18,9 +18,9 @@ in turn requires the user to sign more independent transactions.
 
 We propose a composition pattern to combine actions across different
 contracts into fewer combined actions (requiring less signatures) for the user
-through the use of an optional UX Composer contract. Such a UX Composer
-contract should be transparant such that only the users intended actions
-can be executed.
+through the use of an optional Gateway Composer contract. Such a Gateway 
+composer contract should be transparant such that only the users intended 
+actions can be executed.
 
 ## Abstract
 <!--A short (~200 word) description of the technical issue being addressed.-->
@@ -40,18 +40,18 @@ interaction flows across multiple contracts.
 ## Specification
 <!--The technical specification should describe the syntax and semantics of any new feature. The specification should be detailed enough to allow competing, interoperable implementations.-->
 
-We can think of the UX composer as a macro automating user actions. Users can
-remove their macros and deploy improved ones.
+We can think of the Gateway composer as a macro automating user actions. Users
+can remove their macros and deploy improved ones.
 
-We detail a UX composer for a user who wants to stake OST
+We detail a Gateway composer for a user who wants to stake OST
 in a Branded Token (BT) contract and following that stake the Branded Tokens
 into a gateway contract to mint the same amount as Utility Branded Tokens (UBT)
 on the sidechain to use within the application of the token.
 
-Every staker deploys her own Gateway composer contract (UXC),
+Every staker deploys her own Gateway composer contract,
 because the messagebus nonce in gateway locks a single message per staker -
-and the UXC contract address is the `staker` for the gateway contract.
-A UXC can be (re-)used for multiple gateways in parallel.
+and the Gateway contract address is the `staker` for the gateway contract.
+A Gateway composer can be (re-)used for multiple gateways in parallel.
 
 #### Assumptions:
 - staking OST originates from a hardware wallet (currently no support for
@@ -59,33 +59,36 @@ A UXC can be (re-)used for multiple gateways in parallel.
 
 #### Flow BrandedToken+Gateway:
 
-1. User approves transfer of OST to composer `OST.approve(uxc, amount)` (USER_SIGN1)
-2. User requests stake from composer `uxc.requestStake(...)` (USER_SIGN2)
+1. User approves transfer of OST to composer `OST.approve(gc, amount)` 
+(USER_SIGNATURE1)
 
-```solidity
-// see more detailed pseudocode below
-function uxc:requestStake(<all-user-params>) 
+2. User requests stake from composer `gc.requestStake(...)` (USER_SIGNATURE2)
+
+```Solidity
+// See more detailed pseudocode below
+function gc:requestStake(<all-user-params>) 
 {
-    // move OST from user to uxc
-    // uxc.requestStake(stakeVT, mintVBT);
+    // Move OST from user to gc
+    // gc.requestStake(stakeVT, mintBT);
     // store StakeRequest struct with <all-user-params>
 }
 ```
-3. Event from `VBT` contract `VBT:StakeRequested` is evaluated against the
+3. Event from `BT` contract `BT:StakeRequested` is evaluated against the
 minting policy of the Branded Token.  A registered workers' key for the
-VBT's organisation can sign the `stakeRequestHash`; the resulting signature
-`(r, s, v)` is required to approve the stakeRequest in the VBT contract. (ORG_SIGN1)
+BT's organisation can sign the `stakeRequestHash`; the resulting signature
+`(r, s, v)` is required to approve the stakeRequest in the BT contract. (ORG_SIGN1)
 
 4. Facilitator can call `gateway.bounty()` to know the active bounty amount,
-and must call `OST.approve(uxc, bounty)`.  This way the bounty
+and must call `OST.approve(gc, bounty)`. 
 
 5. Facilitator can generate a secret and corresponding hashlock for
-`gateway:stake`, however the staker is the composer `uxc`,
-so the facilitator must call on `uxc.acceptStakeRequest(...)` (FACIL_SIGN1)
+`gateway:stake`. However the staker is the composer `gc`,
+so the facilitator must call on `gc.acceptStakeRequest(...)` 
+(FACILITATOR_SIGN1)
 
-```solidity
-// see more detailed pseudocode below
-function uxc::acceptStakeRequest(_stakeRequestHash, _ORG_SIGN1, _hashLock)
+```Solidity
+// See more detailed pseudocode below
+function gc::acceptStakeRequest(_stakeRequestHash, _ORG_SIGN1, _hashLock)
 {
     // load sr = StakeRequests[_stakeRequestHash]
 
@@ -93,10 +96,10 @@ function uxc::acceptStakeRequest(_stakeRequestHash, _ORG_SIGN1, _hashLock)
     // ost.transferFrom(msg.sender, this, bounty);
     // ost.approve(st.gateway, bounty);
 
-    // require(VBT.acceptStakeRequest(_stakeRequestHash, _ORG_SIGN1));
-    // VBT.approve(sr.gateway, sr.mintVBT);
+    // require(BT.acceptStakeRequest(_stakeRequestHash, _ORG_SIGN1));
+    // BT.approve(sr.gateway, sr.mintBT);
     // GatewayI(sr.gateway).stake(
-        sr.mintVBT,
+        sr.mintBT,
         sr.beneficiary,
         sr.gasPrice,
         sr.gasLimit,
@@ -108,17 +111,31 @@ function uxc::acceptStakeRequest(_stakeRequestHash, _ORG_SIGN1, _hashLock)
 }
 ```
 
+## Flow OSTPrime
+ 
+ There is only a gateway contract (no BrandedToken contract) mapping (OST on Ethereum mainnet) -> (OSTPrime on sidechain). 
+ So stake and mint of OSTPrime would just take two signatures from the user without the obvious need for a composer contract;
+ 
+ Stake and Mint flow of OSTPrime will look like below:
+ 
+ - OST.approve(gateway, amount)
+ - Gateway.stake(amount, ..., hashlock)
+ 
+ Hashlock would have to be given to the user (assuming the user is not his own facilitator). We will evaluate this further.
+
 #### Additional requirements
 
-Composer must also support
+Composer must also support Below functions:
+
 - `transferVT`, `approveVT` by `onlyOwner`
-- `transferVBT`, `approveVBT` by `onlyOwner`
-- `revertStakeRequest` for VBT
+- `transferBT`, `approveBT` by `onlyOwner`
+- `revertStakeRequest` for BT
 - `revertStake` for Gateway
 
 Composer can support
+
 - `destroy` to selfdestruct, but be warned that it risks loss of funds if there
-are ongoing VBT stake requests or gateway stake operations - on revert they
+are ongoing BT stake requests or gateway stake operations - on revert they
 would refund the destroyed contract address. We can check minimally that the
 composer has no balances and/or there are no ongoing stake requests
 (optionally).
@@ -127,42 +144,43 @@ composer has no balances and/or there are no ongoing stake requests
 <!--The implementations must be completed before any OIP is given status "Final", but it need not be completed before the OIP is accepted. While there is merit to the approach of reaching consensus on the specification and rationale before writing code, the principle of "rough consensus and running code" is still useful when it comes to resolving many discussions of API details.-->
 Sketch pieces of code to guide
 
-```solidity
+```Solidity
 contract GatewayComposer {
 
     constructor (
         address _owner,
         eip20tokenI _ost,
-        ValueBackedI _brandedToken)
+        ValueBackedI _brandedToken
+    )
 
     function requestStake(
-        /// amount in VT (Value Token, set to OST)
+        /// Amount in VT (Value Token, set to OST)
         uint256 _stakeVT,
-        /// expected amount in VBT
-        uint256 _mintVBT,
-        /// gateway to transfer VBT into
+        /// Expected amount in BT
+        uint256 _mintBT,
+        /// Gateway to transfer BT into
         address _gateway,
-        /// beneficiary address on the metablockchain
+        /// Beneficiary address on the metablockchain
         address _beneficiary,
-        /// gas price for facilitator fee in (U)BT
+        /// Gas price for facilitator fee in (U)BT
         uint256 _gasPrice,
-        /// gas limit for message passing
+        /// Gas limit for message passing
         uint256 _gasLimit,
-        /// messagebus nonce for staker
-        /// note: don't attempt to compute the nonce in UXC
+        /// Messagebus nonce for staker
+        /// Note: don't attempt to compute the nonce in GC
         uint256 _nonce
     )
         onlyOwner
         returns (bytes32 stakeRequestHash_)
     {
-        require(_mintVBT == BT.convert(_stakeVT));
+        require(_mintBT == BT.convert(_stakeVT));
         require(OST.transferFrom(msg.sender, this, _stakeVT));
-        OST.approve(VBT, _stakeVT);
-        require(VBT.requestStake(_stakeVT, _mintVBT));
+        OST.approve(BT, _stakeVT);
+        require(BT.requestStake(_stakeVT, _mintBT));
 
         stakeRequests[_stakeRequestHash] = StakeRequest({
             stakeVT: stakeVT,
-            mintVBT: _mintVBT,
+            mintBT: _mintBT,
             gateway: _gateway,
             beneficiary: _beneficiary,
             gasPrice: _gasPrice,
@@ -186,10 +204,10 @@ contract GatewayComposer {
         // ost.transferFrom(msg.sender, this, bounty);
         // ost.approve(st.gateway, bounty);
 
-        // require(VBT.acceptStakeRequest(_stakeRequestHash, _ORG_SIGN1));
-        // VBT.approve(sr.gateway, sr.mintVBT);
+        // require(BT.acceptStakeRequest(_stakeRequestHash, _ORG_SIGN1));
+        // BT.approve(sr.gateway, sr.mintBT);
         require(GatewayI(sr.gateway).stake(
-            sr.mintVBT,
+            sr.mintBT,
             sr.beneficiary,
             sr.gasPrice,
             sr.gasLimit,
@@ -201,7 +219,7 @@ contract GatewayComposer {
     function transferVT(...) onlyOwner
     function approveVT(...) onlyOwner
 
-    function transferVBT(...) onlyOwner
-    function approveVBT(...) onlyOwner
+    function transferBT(...) onlyOwner
+    function approveBT(...) onlyOwner
 }
 ```
