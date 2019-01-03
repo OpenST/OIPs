@@ -50,7 +50,7 @@ on the sidechain to use within the application of the token.
 
 Every staker deploys her own Gateway composer contract,
 because the messagebus nonce in gateway locks a single message per staker -
-and the Gateway contract address is the `staker` for the gateway contract.
+and the Gateway Composer (GC) address is the `staker` for the gateway contract.
 A Gateway composer can be (re-)used for multiple gateways in parallel.
 
 #### Assumptions:
