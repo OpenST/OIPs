@@ -1,6 +1,6 @@
 ---
 oip: <to be assigned>
-title: <Gateway composer for Branded Token and Gateway>
+title: <Gateway Composer for Branded Token and Gateway>
 author: <@jasonklein, @abhayks1, Benjamin Bollen (@benjaminbollen)>
 discussions-to: <https://discuss.openst.org/t/uxcomposer-brandedtoken-gateway/53>
 status: Draft
@@ -19,7 +19,7 @@ in turn requires the user to sign more independent transactions.
 We propose a composition pattern to combine actions across different
 contracts into fewer combined actions (requiring less signatures) for the user
 through the use of an optional Gateway Composer contract. Such a Gateway 
-composer contract should be transparant such that only the users intended 
+Composer contract should be transparant such that only the users intended 
 actions can be executed.
 
 ## Abstract
@@ -40,18 +40,18 @@ interaction flows across multiple contracts.
 ## Specification
 <!--The technical specification should describe the syntax and semantics of any new feature. The specification should be detailed enough to allow competing, interoperable implementations.-->
 
-We can think of the Gateway composer as a macro automating user actions. Users
+We can think of the Gateway Composer as a macro automating user actions. Users
 can remove their macros and deploy improved ones.
 
-We detail a Gateway composer for a user who wants to stake OST
+We detail a Gateway Composer for a user who wants to stake OST
 in a Branded Token (BT) contract and following that stake the Branded Tokens
 into a gateway contract to mint the same amount as Utility Branded Tokens (UBT)
 on the sidechain to use within the application of the token.
 
-Every staker deploys her own Gateway composer contract,
+Every staker deploys her own Gateway Composer contract,
 because the messagebus nonce in gateway locks a single message per staker -
 and the Gateway Composer (GC) address is the `staker` for the gateway contract.
-A Gateway composer can be (re-)used for multiple gateways in parallel.
+A Gateway Composer can be (re-)used for multiple gateways in parallel.
 
 #### Assumptions:
 - staking OST originates from a hardware wallet (currently no support for
@@ -59,10 +59,11 @@ A Gateway composer can be (re-)used for multiple gateways in parallel.
 
 #### Flow BrandedToken+Gateway:
 
-1. User approves transfer of OST to composer `OST.approve(gc, amount)` 
+1. User approves transfer of OST to Gateway Composer `OST.approve(gc, amount)` 
 (USER_SIGNATURE1)
 
-2. User requests stake from composer `gc.requestStake(...)` (USER_SIGNATURE2)
+2. User requests stake from Gateway Composer `gc.requestStake(...)` 
+(USER_SIGNATURE2)
 
 ```Solidity
 // See more detailed pseudocode below
@@ -82,7 +83,7 @@ BT's organisation can sign the `stakeRequestHash`; the resulting signature
 and must call `OST.approve(gc, bounty)`. 
 
 5. Facilitator can generate a secret and corresponding hashlock for
-`gateway:stake`. However the staker is the composer `gc`,
+`gateway:stake`. However the staker is the Gateway Composer `gc`,
 so the facilitator must call on `gc.acceptStakeRequest(...)` 
 (FACILITATOR_SIGN1)
 
@@ -114,7 +115,7 @@ function gc::acceptStakeRequest(_stakeRequestHash, _ORG_SIGN1, _hashLock)
 ## Flow OSTPrime
  
  There is only a gateway contract (no BrandedToken contract) mapping (OST on Ethereum mainnet) -> (OSTPrime on sidechain). 
- So stake and mint of OSTPrime would just take two signatures from the user without the obvious need for a composer contract;
+ So stake and mint of OSTPrime would just take two signatures from the user without the obvious need for a Gateway Composer contract;
  
  Stake and Mint flow of OSTPrime will look like below:
  
@@ -125,19 +126,19 @@ function gc::acceptStakeRequest(_stakeRequestHash, _ORG_SIGN1, _hashLock)
 
 #### Additional requirements
 
-Composer must also support Below functions:
+Gateway Composer must also support Below functions:
 
 - `transferVT`, `approveVT` by `onlyOwner`
 - `transferBT`, `approveBT` by `onlyOwner`
 - `revertStakeRequest` for BT
 - `revertStake` for Gateway
 
-Composer can support
+Gateway Composer can support
 
 - `destroy` to selfdestruct, but be warned that it risks loss of funds if there
 are ongoing BT stake requests or gateway stake operations - on revert they
 would refund the destroyed contract address. We can check minimally that the
-composer has no balances and/or there are no ongoing stake requests
+Gateway Composer has no balances and/or there are no ongoing stake requests
 (optionally).
 
 ## Implementation
