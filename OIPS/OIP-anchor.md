@@ -1,8 +1,8 @@
 ---
-oip: <to be assigned>
-title: Anchor: Immutably Archived State Roots
+oip: 10
+title: Anchor - Immutably Archived State Roots
 author: Martin Schenck (@schemar) <martin@ost.com>
-discussions-to: <URL>
+discussions-to: https://discuss.openst.org/t/anchor-oip-0010/54
 status: Draft
 type: Standards Track
 category (*only required for Standard Track): Mosaic
@@ -12,7 +12,7 @@ replaces (*optional): none
 ---
 
 <!--You can leave these HTML comments in your merged OIP and delete the visible duplicate text guides, they will not appear and may be helpful to refer to if you edit it again. This is the suggested template for new OIPs. Note that an OIP number will be assigned by an editor. When opening a pull request to submit your OIP, please use an abbreviated title in the filename, `OIP-draft_title_abbrev.md`. The title should be 44 characters or less. Thanks to the Ethereum Improvement Proposal (EIP) process for the model we borrow here.-->
-# Anchor: Immutably Archived State Roots
+# Anchor - Immutably Archived State Roots
 
 ## Simple Summary
 <!--"If you can't explain it simply, you don't understand it well enough." Provide a simplified and layman-accessible explanation of the OIP.-->
