@@ -1,0 +1,60 @@
+@startuml sequence-diagram
+
+actor org_worker as "Organization\nWorker"
+participant credit_budget_holder as "Credit Budget Holder"
+participant token_holder as "Token Holder"
+participant ubt as "Utility Branded Token"
+participant custom_rule as "Custom Rule"
+participant credit as "Credit"
+participant token_rules as "Token Rules"
+
+org_worker->credit_budget_holder: \n\
+    **executeRule (**\n\
+        ""address"" tokenHolder, \n\
+        ""uint256"" creditAmount, \n\
+        ""address"" to, \n\
+        ""bytes"" data, \n\
+        ""uint256"" nonce, \n\
+        ""uint8"" v, \n\
+        ""bytes32"" r, \n\
+        ""bytes32"" s \n\
+    **)** **onlyWorker**
+
+credit_budget_holder->token_rules: **allowTransfers()**
+credit_budget_holder->ubt: **approve( **tokenRules, creditAmount **)**
+
+credit_budget_holder->token_holder: **executeRule( **to, data, none, v, r, s **)**
+
+token_holder->token_rules: **allowTransfers()**
+token_holder->ubt: **approve(** tokenRules, spendingLimit **)**
+
+token_holder->custom_rule: **_to.call.value(msg.value)(data)**
+
+custom_rule->credit: \n\
+    **executeTransfers(** \n\
+        from, \n\
+        transfersTo, \n\
+        transfersAmount \n\
+    **)**
+
+credit->token_rules: \n\
+    **executeTransfers (** \n\
+        creditBudgetHolder, \n\
+        tokenHolder, \n\
+        min(creditAmount, sum(transfersAmount)) \n\
+    **)**
+
+credit->token_rules: \n\
+    **executeTransfers (** \n\
+        tokenHolder, \n\
+        transfersTo, \n\
+        transfersAmount \n\
+    **)**
+
+token_holder->ubt: **approve(** tokenRules, 0 **)**
+token_holder->token_rules: **disallowTransfers()**
+
+credit_budget_holder->ubt: **approve(** tokenRules, 0 **)**
+credit_budget_holder->token_rules: **disallowTransfers()**
+
+@enduml

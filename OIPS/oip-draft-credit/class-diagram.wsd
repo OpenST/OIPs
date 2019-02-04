@@ -1,0 +1,117 @@
+@startuml class-diagram
+
+class CreditBudgetHolder <<Contract>> {
+    ..
+    +**executeRule (** \n\
+        ""address"" _tokenHolder, \n\
+        ""uint256"" _creditAmount, \n\
+        ""address"" _to, \n\
+        ""bytes"" _data, \n\
+        ""uint256"" _nonce, \n\
+        ""uint8"" _v, \n\
+        ""bytes32"" _r, \n\
+        ""bytes32"" _s
+    **)** \n\
+        **onlyWorker** \n\
+        ""payable"" \n\
+        ""returns"" (""bool"")
+    ..
+    +**transfer (** \n\
+        ""address"" _to, \n\
+        ""uint256"" _value
+    **)** \n\
+        **onlyOwner** \n\
+        ""returns"" (""bool"")
+    ..
+    #**constructor (** \n\
+        ""address"" _tokenRules, \n\
+        ""address"" _token, \n\
+        ""address"" _organization
+    **)**
+    ..
+}
+
+class TokenHolder <<Contract>> {
+    ..
+    +**executeRule (** \n\
+        ""address"" _to, \n\
+        ""bytes"" _data, \n\
+        ""uint256"" _nonce, \n\
+        ""uint8"" _v, \n\
+        ""bytes32"" _r, \n\
+        ""bytes32"" _s
+    **)** ""returns"" (""bool"")
+    ..
+}
+
+class Credit <<Contract>> {
+    ..
+    +**executeTransfers (** \n\
+        ""address"" _from, \n\
+        ""address[]"" _transfersTo, \n\
+        ""uint256[]"" _transfersAmount
+    **)**
+    ..
+    #**constructor (** \n\
+        ""address"" _creditBudgetHolder, \n\
+        ""address"" _tokenRules, \n\
+        ""address"" _token
+    **)**
+    ..
+}
+
+class UtilityBrandedToken <<Contract>> {
+    ..
+    #**approve (** \n\
+        ""address"" _spender, \n\
+        ""uint256"" _value
+    **)** \n\
+        ""returns"" (""bool"")
+    ..
+    #**allowance (** \n\
+        ""address"" _owner, \n\
+        ""address"" _spender
+    **)** ""returns"" (""uint256"")
+    ..
+}
+
+class CreditRule <<Rule Contract>>
+
+class TokenRules <<Contract>> {
+    ..
+    +**executeTransfers (** \n\
+        ""address"" _from, \n\
+        ""address[]"" _transfersTo, \n\
+        ""uint256[]"" _transfersAmount
+    **)**
+    ..
+}
+
+class Organized <<Contract>>
+
+together {
+    class Organized
+    class CreditBudgetHolder
+}
+
+together {
+    class Credit
+    class CreditRule
+}
+
+Organized <|-- CreditBudgetHolder
+
+CreditBudgetHolder o-- TokenRules
+CreditBudgetHolder o-- UtilityBrandedToken
+TokenHolder o-- TokenRules
+CreditRule o-- TokenRules
+CreditRule o-- Credit
+Credit o-- CreditBudgetHolder
+Credit o-- TokenRules
+TokenRules o-- CreditRule
+Credit o-- UtilityBrandedToken
+
+CreditBudgetHolder - CreditRule
+TokenHolder - CreditRule
+
+@enduml
